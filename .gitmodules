@@ -1,0 +1,3 @@
+[submodule "ec2-git-bootstrap"]
+	path = ec2-git-bootstrap
+	url = git://github.com/giorgenes/ec2-git-bootstrap.git
