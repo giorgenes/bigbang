@@ -1,0 +1,86 @@
+= BigBang
+
+== What is BigBang?
+
+Bigbang is a tool to create clusters using Amazon EC2 in a scriptable way.
+You create a descriptor file (called universe file) which describes your whole
+cluster and then you can launch it on EC2 with a single command.
+Bigbang allows you to use the same "universe" file to create multiple "universes", say
+for example a live, a QA and staging clusters.
+You can even use it to automate the creation of a cluster for performance testing
+purposes.
+
+== What can it do for you?
+
+BigBang can do the following:
+- startup ec2 instances
+- allocate and assign elastic ip's to instances
+- assign instances to load balancer
+- create DNS record entries (Amazon and Zerigo supported).
+
+== How does it work?
+
+As stated before, all you have to do is create a "universe.rb" file which describes
+your cluster.
+You then run "bigbang explode <cluster-name>" and it will "explode your universe" :).
+
+== How does it bootstrap the boxes?
+
+Bigbang uses a "git-based" bootstraper. What it means it that you configure a git repo which
+contains a "run" script. Bigbang will make sure this repo is cloned inside your ec2 instance
+and executed. What this script does is up to you.
+It can then for example install and setup puppet or chef which will continue the provisioning
+of the instance.
+
+== A simple example
+
+Consider the following universe file:
+
+	universe do
+		config do |c|
+			c.access_key_id = "YOUR-AMAZON-ACCESS_KEY"
+			c.secret_key = "YOUR-AMAZON-SECRET_KEY"
+
+			c.dns :provider => 'Zerigo', 
+				:zerigo_email => "example@example.com",
+				:zerigo_token => 'xxxxxxxxxxxxx'
+		
+			c.domain = "example.com"
+		end
+
+		instance "db" do |i|
+			i.ami = "ami-e2af508b"
+			i.key_name = "dev"
+			i.type = "m1.small"
+			i.domain = ["db", "db-slave"]
+			i.wildcard_domain = true
+			i.elastic_ip = true
+			i.bootstrap_repo = "git://github.com/giorgenes/ec2-chef-bootstrap.git"
+		end
+	end
+
+In this example we have a single instance called "db".
+So if you run for example "bigbang explode live" it will do the following:
+- create an ec2 instance with type "m1.small" and ami and key as stated.
+- allocate an elastic ip and associate with the intance.
+- clone the specified repo inside the box and run it (in this example, it will install chef).
+- create DNS records pointing to the instance: live.db.example.com and live.db-slave.example.com
+- it will also create wildcard DNS records: *.live.db.example.com and *.live.db-slave.example.com
+
+== Commands
+
+# creates a universe called <universe-name>
+bigbang explode <universe-name>
+
+# list universes
+bigbang list
+
+# kill a universe
+bigbang kill <universe-name>
+
+# test configuration
+bigbang test
+
+= IMPORTANT
+
+This gem is still in very early development stage.
