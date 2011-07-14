@@ -1,0 +1,19 @@
+
+
+# creates the base images
+bigbang base
+
+# run the instances
+bigbang explode <universe-info.rb>
+
+# list universes
+bigbang list
+
+# kill a universe
+bigbang kill <universe-name>
+
+# resize clusters
+bigbang resize
+
+# test configuration
+bigbang test
