@@ -36,29 +36,29 @@ of the instance.
 
 Consider the following universe file:
 
-	universe do
-		config do |c|
-			c.access_key_id = "YOUR-AMAZON-ACCESS_KEY"
-			c.secret_key = "YOUR-AMAZON-SECRET_KEY"
-
-			c.dns :provider => 'Zerigo', 
-				:zerigo_email => "example@example.com",
-				:zerigo_token => 'xxxxxxxxxxxxx'
-		
-			c.domain = "example.com"
-		end
-
-		instance "db" do |i|
-			i.ami = "ami-e2af508b"
-			i.key_name = "dev"
-			i.type = "m1.small"
-			i.domain = ["db", "db-slave"]
-			i.wildcard_domain = true
-			i.elastic_ip = true
-			i.bootstrap_repo = "git://github.com/giorgenes/ec2-chef-bootstrap.git"
-		end
-	end
-
+  	universe do
+  		config do |c|
+  			c.access_key_id = "YOUR-AMAZON-ACCESS_KEY"
+  			c.secret_key = "YOUR-AMAZON-SECRET_KEY"
+  
+  			c.dns :provider => 'Zerigo', 
+  				:zerigo_email => "example@example.com",
+  				:zerigo_token => 'xxxxxxxxxxxxx'
+  		
+  			c.domain = "example.com"
+  		end
+  
+  		instance "db" do |i|
+  			i.ami = "ami-e2af508b"
+  			i.key_name = "dev"
+  			i.type = "m1.small"
+  			i.domain = ["db", "db-slave"]
+  			i.wildcard_domain = true
+  			i.elastic_ip = true
+  			i.bootstrap_repo = "git://github.com/giorgenes/ec2-chef-bootstrap.git"
+  		end
+  	end
+  
 In this example we have a single instance called "db".
 So if you run for example "bigbang explode live" it will do the following:
 - create an ec2 instance with type "m1.small" and ami and key as stated.
