@@ -1,0 +1,47 @@
+#!/usr/bin/env ruby
+
+require 'rubygems'
+require 'net/dns/resolver'
+require 'lib/bigbang'
+
+def help
+	puts "test"
+end
+
+$universe = nil
+def universe(&block)
+	$universe = u = BigBang::Universe.new
+	u.instance_eval(&block)
+end
+
+if ARGV.empty?
+	help
+	exit 1
+end
+
+case ARGV[0]
+when 'test':
+	require 'universe.rb'
+	$universe.test
+when 'explode':
+	if ARGV.size < 2 then
+		puts "#{$0} explode <universe name>"
+		exit 1
+	end
+	require 'universe.rb'
+	$universe.explode(ARGV[1])
+when 'list':
+	require 'universe.rb'
+	$universe.list
+when 'kill':
+	if ARGV.size < 2 then
+		puts "#{$0} kill <universe name>"
+		exit 1
+	end
+	require 'universe.rb'
+	$universe.kill(ARGV[1])
+else
+	puts "unknown command #{ARGV[0]}"
+	exit 2
+end
+
