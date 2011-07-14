@@ -1,1 +1,2 @@
-require 'lib/bigbang/universe'
+
+require 'bigbang/universe'

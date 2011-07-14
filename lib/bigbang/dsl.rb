@@ -1,6 +1,6 @@
-require 'lib/bigbang/config'
-require 'lib/bigbang/instance'
-require 'lib/bigbang/cluster'
+require 'bigbang/config'
+require 'bigbang/instance'
+require 'bigbang/cluster'
 
 module BigBang
 	module DSL

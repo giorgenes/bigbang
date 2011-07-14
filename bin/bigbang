@@ -1,15 +1,15 @@
 #!/usr/bin/env ruby
 
-require 'rubygems'
-require 'net/dns/resolver'
-require 'lib/bigbang'
+$: << File.dirname(__FILE__) + "/../lib/"
+require File.dirname(__FILE__) + "/../lib/bigbang"
 
 def help
 	puts "test"
 end
 
 $universe = nil
-def universe(&block)
+
+def self.universe(&block)
 	$universe = u = BigBang::Universe.new
 	u.instance_eval(&block)
 end
@@ -21,7 +21,7 @@ end
 
 case ARGV[0]
 when 'test':
-	require 'universe.rb'
+	load './universe.rb'
 	$universe.test
 when 'explode':
 	if ARGV.size < 2 then

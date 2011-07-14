@@ -1,12 +1,12 @@
-require 'lib/bigbang/provider'
-require 'lib/bigbang/instance'
-require 'lib/bigbang/dsl'
-require 'lib/bigbang/ec2-git-bootstrap'
 require 'base64'
 require 'AWS'
 require 'ap'
 require 'set'
 require 'fog'
+require 'bigbang/provider'
+require 'bigbang/instance'
+require 'bigbang/dsl'
+require 'bigbang/ec2-git-bootstrap'
 
 module BigBang
 	class Universe

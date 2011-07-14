@@ -1,4 +1,4 @@
-require 'lib/bigbang/instance'
+require 'bigbang/instance'
 
 module BigBang
 	class Cluster < Instance
