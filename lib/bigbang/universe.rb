@@ -1,6 +1,8 @@
 require 'lib/bigbang/provider'
 require 'lib/bigbang/instance'
 require 'lib/bigbang/dsl'
+require 'lib/bigbang/ec2-git-bootstrap'
+require 'base64'
 require 'AWS'
 require 'ap'
 require 'set'
@@ -123,11 +125,17 @@ module BigBang
 
 		def run_instances(name)
 			instances = []
+			gen = Ec2BootstrapGenerator.new
 			@instances.each do |instance|
+				userdata = Base64.encode64(gen.generate_from_hash(
+					"bootstrap-repo" => instance.bootstrap_repo
+				))
 				res = provider.ec2.run_instances(
 					:image_id => instance.ami,
 					:key_name => instance.key_name,
-					:instance_type => instance.type)
+					:instance_type => instance.type,
+					:user_data => userdata)
+				ap res
 				res.instancesSet.item.each do |i|
 					instances << i
 					provider.ec2.create_tags(:resource_id => i.instanceId,
@@ -163,7 +171,7 @@ module BigBang
 					domains = @instances[i].domain
 				end
 				domains.each do |domain|
-					domain = "#{name}.#{@instances[i].domain}"
+					domain = "#{name}.#{domain}"
 					puts "creating domain #{domain}.#{@config.domain} to #{addrs[i]}"
 					provider.create_dns(domain, addrs[i])
 					if @instances[i].wildcard_domain == true
