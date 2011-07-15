@@ -21,6 +21,12 @@ module BigBang
 			@provider = Provider.new(@config)
 		end
 
+		def get_availability_zones
+			item = provider.ec2.describe_availability_zones.availabilityZoneInfo.item
+			item = [] if item.nil?
+			item
+		end
+
 		def get_instances
 			rset = provider.ec2.describe_instances.reservationSet
 			if rset.nil?
@@ -42,9 +48,26 @@ module BigBang
 			items
 		end
 		
-		def test
-			get_instances	
-			puts "ec2 access OK"
+		def test_availability_zones
+			zones = Set.new
+			@runs.each do |r|
+				r.zone_sizes.each_key do |k|
+					zones << k
+				end
+			end
+
+			return if zones.empty?
+			ec2_zones = get_availability_zones
+			zones.each do |zone|
+				unless ec2_zones.find { |z| z.zoneName == zone}
+					raise "zone '#{zone}' not found"
+				end
+			end
+
+			puts "Availability zones OK"
+		end
+
+		def test_amis
 			@instances.collect { |i| i.ami }.to_set.each do |ami|
 				begin
 					provider.ec2.describe_images(:image_id => [ami])
@@ -53,11 +76,23 @@ module BigBang
 				end
 			end
 			puts "AMI's OK"
+		end
+
+		def test_dns
 			if provider.configured_zone.nil?
 				puts "Configured DNS domain zone not found"
 			else
 				puts "DNS domain OK"
 			end
+		end
+
+		def test
+			get_instances
+			puts "ec2 access OK"
+
+			test_availability_zones
+			test_amis
+			test_dns
 		end
 
 		def wait_for_eips(expected)
