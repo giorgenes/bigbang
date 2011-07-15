@@ -10,8 +10,9 @@ end
 $universe = nil
 
 def self.universe(&block)
-	$universe = u = BigBang::Universe.new
-	u.instance_eval(&block)
+	dsl = BigBang::DSL.new
+	dsl.instance_eval(&block)
+	$universe = BigBang::Universe.new(dsl)
 end
 
 if ARGV.empty?

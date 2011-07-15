@@ -3,7 +3,13 @@ require 'bigbang/instance'
 require 'bigbang/cluster'
 
 module BigBang
-	module DSL
+	class DSL
+		attr_accessor :instances, :conf
+		
+		def initialize
+			@instances = []
+		end
+
 		def cluster(name, &block)
 			@instances << Cluster.new(name).tap do |cluster|
 				cluster.instance_eval(&block)
@@ -17,7 +23,7 @@ module BigBang
 		end
 
 		def config(&block)
-			@config = Config.new.tap do |c|
+			@conf = Config.new.tap do |c|
 				c.instance_eval(&block)
 			end
 		end
