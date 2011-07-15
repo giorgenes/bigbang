@@ -10,13 +10,11 @@ require 'bigbang/ec2-git-bootstrap'
 
 module BigBang
 	class Universe
-		def initialize
-			@clusters = []
-			@instances = []
+		def initialize(dsl)
+			@instances = dsl.instances
+			@config = dsl.conf
 		end
 
-		include DSL
-	
 		def provider
 			return @provider unless @provider.nil?
 			@provider = Provider.new(@config)
@@ -191,7 +189,7 @@ module BigBang
 			end
 		end
 
-		def tags
+		def get_tags
 			tag_set = provider.ec2.describe_tags(:filter => 
 					[{'key' => 'bb_universe'}]).tagSet
 			if tag_set.nil?
@@ -203,7 +201,7 @@ module BigBang
 
 		def list
 			universes = Set.new
-			tags.each do |tag|
+			get_tags.each do |tag|
 				universes << tag.value
 			end
 			universes.each do |u|
@@ -222,24 +220,55 @@ module BigBang
 			end
 		end
 		
-		def kill_instance(tag, running)
-			instance = running.find { |i| i.instanceId == tag.resourceId }
-			if instance.nil?
-				puts "instance #{tag.resourceId} is not running. skipping"
-				return
+		def kill_instance(instance)
+			confirm("kill instance #{instance.instanceId}") do
+				provider.ec2.terminate_instances(:instance_id => [instance.instanceId])
+				puts "sent termination signal to #{instance.instanceId}"
 			end
-			confirm("kill instance #{tag.resourceId}") do
-				provider.ec2.terminate_instances(:instance_id => [tag.resourceId])
-				puts "sent termination signal to #{tag.resourceId}"
+		end
+
+		def instance_tags(tags = nil)
+			tags = get_tags if tags.nil?
+			tags.find_all { |t| t.resourceType == 'instance' }
+		end
+
+		def universe_running_instances(running, universe_tags)
+			res = []
+			instance_tags(universe_tags).each do |t|
+				i = running.find { |i| i.instanceId == t.resourceId }
+				res << i unless i.nil?
+			end
+
+			res
+		end
+
+		def universe_tags(name)
+			get_tags.find_all do |tag|
+				tag.value == name
+			end
+		end
+
+		def kill_dns_entry(instance)
+			records = provider.configured_zone.records.find_all do |r|
+				r.value == instance.ipAddress
+			end
+
+			domains = records.collect { |r| r.domain }
+			confirm("Would you like to remove the following dns records?\n" +
+				domains.join("\n") + "\n") do
+				records.each do |r|
+					puts "removing DNS #{r.domain}"
+					r.destroy
+				end
 			end
 		end
 
 		def kill(name)
 			running = running_instances
-			tags.find_all do |tag|
-				tag.value == name
-			end.each do |tag|
-				send("kill_#{tag.resourceType}", tag, running)
+			instances = universe_running_instances(running, universe_tags(name))
+			instances.each do |i|
+				kill_dns_entry(i)
+				kill_instance(i)
 			end
 		end
 	end
