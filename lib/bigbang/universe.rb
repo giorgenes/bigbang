@@ -35,8 +35,13 @@ module BigBang
 			end
 		end
 
+		def get_addresses
+			items = provider.ec2.describe_addresses.addressesSet.item
+			items = [] if items.nil?
+			items
+		end
+		
 		def test
-			ap provider.eips
 			get_instances	
 			puts "ec2 access OK"
 			@instances.collect { |i| i.ami }.to_set.each do |ami|
@@ -133,7 +138,6 @@ module BigBang
 					:key_name => instance.key_name,
 					:instance_type => instance.type,
 					:user_data => userdata)
-				ap res
 				res.instancesSet.item.each do |i|
 					instances << i
 					provider.ec2.create_tags(:resource_id => i.instanceId,
@@ -262,6 +266,10 @@ module BigBang
 			records = records.find_all do |r|
 				r.value == instance.ipAddress
 			end
+			if records.empty?
+				puts "no DNS records found for ip #{instance.ipAddress}"
+				return
+			end
 
 			domains = records.collect { |r| r.domain }
 			confirm("Would you like to remove the following dns records?\n" +
@@ -273,11 +281,27 @@ module BigBang
 			end
 		end
 
+		def kill_eip(i, addresses)
+			addr = addresses.find { |a| a.publicIp == i.ipAddress }
+				
+			unless addr.nil?
+				confirm("Would you like to release EIP address #{addr.publicIp} of instance #{i.instanceId}") do
+					puts "disassociating address #{addr.publicIp}"
+					provider.ec2.disassociate_address(:public_ip => addr.publicIp)
+					
+					puts "releasing address #{addr.publicIp}"
+					provider.ec2.release_address(:public_ip => addr.publicIp)
+				end
+			end
+		end
+
 		def kill(name)
 			running = running_instances
 			instances = universe_running_instances(running, universe_tags(name))
+			addresses = get_addresses
 			instances.each do |i|
 				kill_dns_entry(i)
+				kill_eip(i, addresses)
 				kill_instance(i)
 			end
 		end
