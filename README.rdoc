@@ -17,6 +17,7 @@ BigBang can do the following:
 - allocate and assign elastic ip's to instances
 - assign instances to load balancer
 - create DNS record entries (Amazon and Zerigo supported).
+- shutdown your whole cluster
 
 == How does it work?
 
@@ -48,38 +49,55 @@ Consider the following universe file:
   			c.domain = "example.com"
   		end
   
-  		instance "db" do |i|
+  		# describe your instance
+  		instance "ubuntu" do |i|
   			i.ami = "ami-e2af508b"
   			i.key_name = "dev"
   			i.type = "m1.small"
-  			i.domain = ["db", "db-slave"]
-  			i.wildcard_domain = true
-  			i.elastic_ip = true
   			i.bootstrap_repo = "git://github.com/giorgenes/ec2-chef-bootstrap.git"
+  		end
+
+  		# run a single instance
+  		run_single_instance("ubuntu") do |r|
+  	  		r.domain = ["db"]
+  	  		r.wildcard_domain = true
+  	  		r.elastic_ip = true
+  	   end
+  
+  		# runs a cluster of db instances
+  		run_cluster("ubuntu") do |r|
+  			r.domain = ["app"]
+  			availability_zone "us-east-1a" => 1
+  			availability_zone "us-east-1b" => 1
   		end
   	end
   
-In this example we have a single instance called "db".
+In this example we have a single instance of "ubuntu" AND a cluster of "ubuntu".
 So if you run for example "bigbang explode live" it will do the following:
-- create an ec2 instance with type "m1.small" and ami and key as stated.
-- allocate an elastic ip and associate with the intance.
-- clone the specified repo inside the box and run it (in this example, it will install chef).
-- create DNS records pointing to the instance: live.db.example.com and live.db-slave.example.com
-- it will also create wildcard DNS records: *.live.db.example.com and *.live.db-slave.example.com
+- For the single instance:
+  - create an ec2 instance with type "m1.small" and ami and key as stated.
+  - allocate an elastic ip and associate with the intance.
+  - clone the specified repo inside the box and run it (in this example, it will install chef).
+  - create DNS records pointing to the instance: live.db.example.com
+  - it will also create wildcard DNS records: *.live.db.example.com
+- For the cluster
+  - create 2 ec2 instances on the specified availability zones.
+  - clone the repo in the boxes and install chef
+  - create DNS records to the boxes: live.app0.example.com and live.app1.example.com
 
 == Commands
 
-# creates a universe called <universe-name>
-bigbang explode <universe-name>
+- creates a universe called <universe-name>
+  bigbang explode <universe-name>
 
-# list universes
-bigbang list
+- list universes
+  bigbang list
 
-# kill a universe
-bigbang kill <universe-name>
+- kill a universe
+  bigbang kill <universe-name>
 
-# test configuration
-bigbang test
+- test configuration
+  bigbang test
 
 = IMPORTANT
 
