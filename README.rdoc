@@ -25,6 +25,11 @@ As stated before, all you have to do is create a "universe.rb" file which descri
 your cluster.
 You then run "bigbang explode <cluster-name>" and it will "explode your universe" :).
 
+== Installation
+
+   $> gem install bigbang
+   
+
 == How does it bootstrap the boxes?
 
 Bigbang uses a "git-based" bootstraper. What it means it that you configure a git repo which
