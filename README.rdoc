@@ -55,7 +55,7 @@ Consider the following universe file:
   			i.key_name = "dev"
   			i.type = "m1.small"
   			i.bootstrap_repo = "git://github.com/giorgenes/ec2-chef-bootstrap.git"
-  		end
+	  	end
 
   		# run a single instance
   		run_single_instance("ubuntu") do |r|
@@ -88,15 +88,19 @@ So if you run for example "bigbang explode live" it will do the following:
 == Commands
 
 - creates a universe called <universe-name>
+  
   bigbang explode <universe-name>
 
 - list universes
+  
   bigbang list
 
 - kill a universe
+  
   bigbang kill <universe-name>
 
 - test configuration
+  
   bigbang test
 
 = IMPORTANT
