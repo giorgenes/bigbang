@@ -5,8 +5,7 @@ module BigBang
 		end
 
 		attr_accessor :ami, :key_name, :type, 
-			:name, :elastic_ip, 
-			:domain, :wildcard_domain,
+			:name,
 			:bootstrap_repo,
 			:bootstrap_params
 	end

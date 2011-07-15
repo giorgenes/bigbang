@@ -12,6 +12,7 @@ module BigBang
 	class Universe
 		def initialize(dsl)
 			@instances = dsl.instances
+			@runs = dsl.runs
 			@config = dsl.conf
 		end
 
@@ -74,18 +75,18 @@ module BigBang
 		end
 
 		def allocate_addresses
-			instances = @instances.find_all { |i| i.elastic_ip == true }
-			if instances.empty?
+			runs = @runs.find_all { |r| r.elastic_ip == true }
+			if runs.empty?
 				puts "no need to allocate elastic ips"
 				return
 			end
 			free_ips = provider.free_eips
-			toalloc = instances.size
+			toalloc = runs.size
 			blacklist = free_ips
 			if free_ips.size > 0
 				n = nil
-				if free_ips.size >= instances.size
-					n = instances.size
+				if free_ips.size >= runs.size
+					n = runs.size
 				else
 					n = free_ips.size
 				end
@@ -103,7 +104,7 @@ module BigBang
 			addrs = wait_for_eips(free_ips.size + toalloc)
 			avail_ips = addrs.collect { |a| a.publicIp }.to_set
 			black_ips = blacklist.collect { |a| a.publicIp }.to_set
-			(avail_ips - black_ips).to_a[0,instances.size]
+			(avail_ips - black_ips).to_a[0,runs.size]
 		end
 
 		def running_instances
@@ -129,7 +130,8 @@ module BigBang
 		def run_instances(name)
 			instances = []
 			gen = Ec2BootstrapGenerator.new
-			@instances.each do |instance|
+			@runs.each do |r|
+				instance = r.instance
 				userdata = Base64.encode64(gen.generate_from_hash(
 					"bootstrap-repo" => instance.bootstrap_repo
 				))
@@ -167,16 +169,16 @@ module BigBang
 		end
 
 		def create_dns_entries(name, instances, addrs)
-			@instances.each_index do |i|
-				domains = [@instances[i].domain]
-				if @instances[i].domain.is_a?(Array)
-					domains = @instances[i].domain
+			@runs.each_index do |i|
+				domains = [@runs[i].domain]
+				if @runs[i].domain.is_a?(Array)
+					domains = @runs[i].domain
 				end
 				domains.each do |domain|
 					domain = "#{name}.#{domain}"
 					puts "creating domain #{domain}.#{@config.domain} to #{addrs[i]}"
 					provider.create_dns(domain, addrs[i])
-					if @instances[i].wildcard_domain == true
+					if @runs[i].wildcard_domain == true
 						provider.create_dns("*.#{domain}", addrs[i])
 					end
 				end
