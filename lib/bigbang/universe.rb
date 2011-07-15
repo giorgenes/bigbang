@@ -204,8 +204,16 @@ module BigBang
 			get_tags.each do |tag|
 				universes << tag.value
 			end
+		
+			running = running_instances
+
 			universes.each do |u|
-				puts u
+				instances = universe_running_instances(running, universe_tags(u))
+				if instances.empty?
+					puts "#{u} (defunct)"
+				else
+					puts "#{u} (#{instances.size} running instances)"
+				end
 			end
 		end
 
@@ -249,7 +257,9 @@ module BigBang
 		end
 
 		def kill_dns_entry(instance)
-			records = provider.configured_zone.records.find_all do |r|
+			records = provider.configured_zone.records
+
+			records = records.find_all do |r|
 				r.value == instance.ipAddress
 			end
 
