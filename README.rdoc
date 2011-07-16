@@ -42,40 +42,40 @@ of the instance.
 
 Consider the following universe file:
 
-  	universe do
-  		config do |c|
-  			c.access_key_id = "YOUR-AMAZON-ACCESS_KEY"
-  			c.secret_key = "YOUR-AMAZON-SECRET_KEY"
+     universe do
+        config do |c|
+           c.access_key_id = "YOUR-AMAZON-ACCESS_KEY"
+           c.secret_key = "YOUR-AMAZON-SECRET_KEY"
   
-  			c.dns :provider => 'Zerigo', 
-  				:zerigo_email => "example@example.com",
-  				:zerigo_token => 'xxxxxxxxxxxxx'
-  		
-  			c.domain = "example.com"
-  		end
+           c.dns :provider => 'Zerigo', 
+              :zerigo_email => "example@example.com",
+              :zerigo_token => 'xxxxxxxxxxxxx'
+        
+           c.domain = "example.com"
+        end
   
-  		# describe your instance
-  		instance "ubuntu" do |i|
-  			i.ami = "ami-e2af508b"
-  			i.key_name = "dev"
-  			i.type = "m1.small"
-  			i.bootstrap_repo = "git://github.com/giorgenes/ec2-chef-bootstrap.git"
-	  	end
+        # describe your instance
+        instance "ubuntu" do |i|
+           i.ami = "ami-e2af508b"
+           i.key_name = "dev"
+           i.type = "m1.small"
+           i.bootstrap_repo = "git://github.com/giorgenes/ec2-chef-bootstrap.git"
+        end
 
-  		# run a single instance
-  		run_single_instance("ubuntu") do |r|
-  	  		r.domain = ["db"]
-  	  		r.wildcard_domain = true
-  	  		r.elastic_ip = true
-  	   end
+        # run a single instance
+        run_single_instance("ubuntu") do |r|
+             r.domain = ["db"]
+             r.wildcard_domain = true
+             r.elastic_ip = true
+        end
   
-  		# runs a cluster of db instances
-  		run_cluster("ubuntu") do |r|
-  			r.domain = ["app"]
-  			availability_zone "us-east-1a" => 1
-  			availability_zone "us-east-1b" => 1
-  		end
-  	end
+        # runs a cluster of db instances
+        run_cluster("ubuntu") do |r|
+           r.domain = ["app"]
+           availability_zone "us-east-1a" => 1
+           availability_zone "us-east-1b" => 1
+        end
+     end
   
 In this example we have a single instance of "ubuntu" AND a cluster of "ubuntu".
 So if you run for example "bigbang explode live" it will do the following:
