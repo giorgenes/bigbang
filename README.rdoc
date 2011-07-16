@@ -94,19 +94,19 @@ So if you run for example "bigbang explode live" it will do the following:
 
 - creates a universe called <universe-name>
   
-  bigbang explode <universe-name>
+   bigbang explode <universe-name>
 
 - list universes
   
-  bigbang list
+   bigbang list
 
 - kill a universe
   
-  bigbang kill <universe-name>
+   bigbang kill <universe-name>
 
 - test configuration
   
-  bigbang test
+   bigbang test
 
 = IMPORTANT
 
