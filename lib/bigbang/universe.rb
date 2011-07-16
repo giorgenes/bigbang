@@ -123,8 +123,8 @@ module BigBang
 				puts "\033[01;32mOK\033[00m"
 				return r
 			rescue => e
-				puts "\033[01;31mERROR\033[00m"
-				raise
+				puts "\033[01;31mERROR"
+				puts "#{e.to_s}\033[00m"
 			end
 		end
 		
