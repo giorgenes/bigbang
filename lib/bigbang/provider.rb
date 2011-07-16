@@ -4,18 +4,31 @@ module BigBang
 			@config = config
 		end
 
+		def aws_server_config
+			{
+				:access_key_id => @config.access_key_id, 
+				:secret_access_key => @config.secret_key,
+			}
+		end
+		
+		def elb_server_config
+			aws_server_config.merge(
+				:server => "elasticloadbalancing.#{@config.region}.amazonaws.com")
+		end
+
+		def ec2_server_config
+			aws_server_config.merge(
+				:server => "ec2.#{@config.region}.amazonaws.com")
+		end
+
 		def ec2
 			return @ec2 unless @ec2.nil?
-			@ec2 = AWS::EC2::Base.new(
-				:access_key_id => @config.access_key_id, 
-				:secret_access_key => @config.secret_key)
+			@ec2 = AWS::EC2::Base.new(ec2_server_config)
 		end
 
 		def elb
 			return @elb unless @elb.nil?
-			@elb = AWS::ELB::Base.new(
-				:access_key_id => @config.access_key_id, 
-				:secret_access_key => @config.secret_key)
+			@elb = AWS::ELB::Base.new(elb_server_config)
 		end
 
 		def dns
