@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.description = %q{}
   s.executables << "bigbang"
   s.files = Dir["src/*"] + Dir["bin/*"] + %w(README.rdoc lib/bigbang.rb) + 
-		Dir["lib/bigbang/*"]
+		Dir["lib/bigbang/*"] + Dir["lib/bigbang/dsl/*"]
   s.extra_rdoc_files = ["README.rdoc"]
   s.rdoc_options = ["--main", "README.rdoc"]
   s.add_dependency('fog')

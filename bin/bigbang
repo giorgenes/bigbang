@@ -9,37 +9,30 @@ end
 
 $universe = nil
 
-def self.universe(&block)
-	dsl = BigBang::DSL.new
-	dsl.instance_eval(&block)
-	$universe = BigBang::Universe.new(dsl)
-end
-
 if ARGV.empty?
 	help
 	exit 1
 end
 
+universe = eval(File.new('./universe.rb').read, binding)
+$universe = BigBang::Universe.new(universe)
+
 case ARGV[0]
 when 'test':
-	load './universe.rb'
 	$universe.test
 when 'explode':
 	if ARGV.size < 2 then
 		puts "#{$0} explode <universe name>"
 		exit 1
 	end
-	require 'universe.rb'
 	$universe.explode(ARGV[1])
 when 'list':
-	require 'universe.rb'
 	$universe.list
 when 'kill':
 	if ARGV.size < 2 then
 		puts "#{$0} kill <universe name>"
 		exit 1
 	end
-	require 'universe.rb'
 	$universe.kill(ARGV[1])
 else
 	puts "unknown command #{ARGV[0]}"
