@@ -48,18 +48,15 @@ module BigBang
 			(avail_ips - black_ips).to_a[0,ninstances]
 		end
 
-
-
 		def wait_for_running(instances)
 			ids = instances.collect { |i| i.instanceId }.to_set
-			print "Waiting for all instances to be in running state. "
-			STDOUT.flush
-			while running_instances_count(ids) < instances.size
-				print "."
-				sleep(5)
-				STDOUT.flush
+			notify("Waiting for all instances to be in running state. ") do
+				while running_instances_count(ids) < instances.size
+					print "."
+					STDOUT.flush
+					sleep(5)
+				end
 			end
-			puts
 		end
 
 		def tag_instance(instance, ec2_instance, name)
@@ -71,8 +68,8 @@ module BigBang
 		end
 
 		def run_instance(instance, userdata, zone, size)
-			puts "launching #{size} instance(s) on availability zone '#{zone}'"
-			provider.ec2.run_instances(
+			notify("launching #{size} instance(s) on availability zone '#{zone}'") do
+				provider.ec2.run_instances(
 					:image_id => instance.ami,
 					:key_name => instance.key_name,
 					:instance_type => instance.type,
@@ -80,7 +77,8 @@ module BigBang
 					:availability_zone => zone,
 					:min_count => size,
 					:max_count => size
-			)
+				)
+			end
 		end
 
 		def run_instances(name)
@@ -117,16 +115,26 @@ module BigBang
 			end
 		end
 
-		def create_dns_entry_for(instance, universe_name, domain, addr, wildcard)
+		def dns_entry_for(instance, universe_name, domain, addr, wildcard)
+			entries = []
 			domain = "#{universe_name}.#{domain}"
-			puts "creating domain #{domain}.#{@config.domain} to #{addr}"
-			provider.create_dns(domain, addr)
+			entries << {:domain => domain, :value => addr, :type => 'A'}
 			if wildcard == true
-				provider.create_dns("*.#{domain}", addr)
+				entries << {:domain => "*.#{domain}", :value => addr, :type => 'A'}
+			end
+			entries
+		end
+
+		def create_dns_entries(entries)
+			entries.each do |entry|
+				notify("creating domain #{entry[:domain]}.#{@config.domain} => #{entry[:value]}") do
+					provider.create_dns(entry[:domain], entry[:value], entry[:type])
+				end
 			end
 		end
 
-		def create_dns_entries(universe_name)
+		def instance_dns_entries(universe_name)
+			entries = []
 			instances_map = get_instances_map
 			@runs.each do |r|
 				addsufix = false
@@ -152,11 +160,50 @@ module BigBang
 						if addsufix
 							domain = "#{domain}#{sufix}"
 						end
-						create_dns_entry_for(instance, universe_name, domain, addr, r.wildcard_domain)
+						entries += dns_entry_for(instance, universe_name, domain, addr, r.wildcard_domain)
 					end
 					sufix += 1
 				end
 			end
+			entries
+		end
+
+		def create_lb(lb)
+			p = notify("creating ELB #{lb.name}") do
+				provider.elb.create_load_balancer(
+					:load_balancer_name => lb.name,
+					:listeners => lb.listeners,
+					:availability_zones => lb.availability_zones)
+			end
+			p
+		end
+
+		def create_load_balancers
+			@runs.each do |r|
+				next unless r.is_a?(ClusterRun)
+				next if r.lb.nil?
+
+				r.lb.ec2_elb = create_lb(r.lb)
+
+				notify("registering instances to ELB #{r.lb.name}") do
+					provider.elb.register_instances_with_load_balancer(
+						:load_balancer_name => r.lb.name,
+						:instances => r.ec2_instances
+					)
+				end
+			end
+		end
+
+		def elb_dns_entries(universe_name)
+			entries = []
+			configured_elbs.each do |lb|
+				lb.domains.each do |domain|
+					subdomain = "#{universe_name}.#{domain}"
+					cname = lb.ec2_elb.CreateLoadBalancerResult.DNSName
+					entries << { :domain => subdomain, :value => cname, :type => "CNAME" }
+				end
+			end
+			entries
 		end
 
 		def explode(name)
@@ -168,7 +215,10 @@ module BigBang
 					assign_addresses(free_eips)
 				end
 			end
-			create_dns_entries(name)
+			create_load_balancers
+			dns_entries = elb_dns_entries(name)
+			dns_entries += instance_dns_entries(name)
+			create_dns_entries(dns_entries)
 		end
 	end
 end

@@ -38,10 +38,16 @@ module BigBang
 			end
 		end
 
+		def test_elb
+			ap provider.elb.describe_load_balancers
+			puts "elb access OK"
+		end
+
 		def test
 			get_instances
 			puts "ec2 access OK"
 
+			test_elb
 			test_availability_zones
 			test_amis
 			test_dns

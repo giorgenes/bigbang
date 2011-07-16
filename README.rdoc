@@ -74,6 +74,13 @@ Consider the following universe file:
            r.domain = ["app"]
            availability_zone "us-east-1a" => 1
            availability_zone "us-east-1b" => 1
+           r.load_balancer("app") do |lb|
+              lb.domains = ["app"]
+              lb.listeners = [
+                 { :protocol => 'http', :load_balancer_port => 80, :instance_port => 80 }
+              ]
+              lb.availability_zones = ["us-east-1a", "us-east-1b"]
+           end
         end
      end
   
@@ -89,6 +96,9 @@ So if you run for example "bigbang explode live" it will do the following:
   - create 2 ec2 instances on the specified availability zones.
   - clone the repo in the boxes and install chef
   - create DNS records to the boxes: live.app0.example.com and live.app1.example.com
+  - create a load balancer called "app" for the http protocol mapping ports 80 to 80.
+  - assign the cluster instances to the created load balancer
+  - create a CNAME record for the load balancer: live.app.example.com
 
 == Commands
 

@@ -2,8 +2,9 @@ module BigBang
 	module KillCmd
 		def kill_instance(instance)
 			confirm("kill instance #{instance.instanceId}") do
-				provider.ec2.terminate_instances(:instance_id => [instance.instanceId])
-				puts "sent termination signal to #{instance.instanceId}"
+				notify("sending termination signal to #{instance.instanceId}") do
+					provider.ec2.terminate_instances(:instance_id => [instance.instanceId])
+				end
 			end
 		end
 
@@ -42,7 +43,20 @@ module BigBang
 			end
 		end
 
+		
+
+		def kill_elb
+			configured_elbs.each do |lb|
+				confirm("Delete ELB #{lb.name}") do
+					notify("deleting ELB #{lb.name}") do
+						provider.elb.delete_load_balancer(:load_balancer_name => lb.name)
+					end
+				end
+			end
+		end
+
 		def kill(name)
+			kill_elb
 			running = running_instances
 			instances = universe_running_instances(running, universe_tags(name))
 			addresses = get_addresses

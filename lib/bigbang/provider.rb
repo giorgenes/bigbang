@@ -11,6 +11,13 @@ module BigBang
 				:secret_access_key => @config.secret_key)
 		end
 
+		def elb
+			return @elb unless @elb.nil?
+			@elb = AWS::ELB::Base.new(
+				:access_key_id => @config.access_key_id, 
+				:secret_access_key => @config.secret_key)
+		end
+
 		def dns
 			return @dns unless @dns.nil?
 			@dns = Fog::DNS.new(@config.dns_opts)
@@ -20,11 +27,11 @@ module BigBang
 			dns.zones.find { |z| z.domain == @config.domain }
 		end
 
-		def create_dns(domain, addr)
+		def create_dns(domain, value, type)
 				configured_zone.records.create(
-						:value => addr,
+						:value => value,
 						:name => domain,
-						:type => "A")
+						:type => type)
 		end
 		
 		def eips

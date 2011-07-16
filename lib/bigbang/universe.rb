@@ -53,10 +53,20 @@ module BigBang
 			map
 		end
 
+		def configured_elbs
+			lbs = []
+			@runs.each do |r|
+				next unless r.is_a?(ClusterRun)
+				next if r.lb.nil?
+				lbs << r.lb
+			end
+			lbs
+		end
+
 		def get_addresses
-			items = provider.ec2.describe_addresses.addressesSet.item
-			items = [] if items.nil?
-			items
+			aset = provider.ec2.describe_addresses.addressesSet
+			return [] if aset.nil?
+			aset.item
 		end
 		
 		def running_instances
@@ -103,6 +113,19 @@ module BigBang
 			else
 				puts "skipping"
 				return false
+			end
+		end
+
+		def notify(msg)
+			print "#{msg}: "
+			STDOUT.flush
+			begin
+				r = yield
+				puts "\033[01;32mOK\033[00m"
+				return r
+			rescue => e
+				puts "\033[01;31mERROR\033[00m"
+				raise
 			end
 		end
 		
