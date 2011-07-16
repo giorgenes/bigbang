@@ -42,7 +42,7 @@ of the instance.
 
 Consider the following universe file:
 
-     universe do
+     BigBang::DSL::Universe.new do
         config do |c|
            c.access_key_id = "YOUR-AMAZON-ACCESS_KEY"
            c.secret_key = "YOUR-AMAZON-SECRET_KEY"
