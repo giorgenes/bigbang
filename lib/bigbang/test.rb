@@ -15,8 +15,6 @@ module BigBang
 					raise "zone '#{zone}' not found"
 				end
 			end
-
-			puts "Availability zones OK"
 		end
 
 		def test_amis
@@ -24,33 +22,33 @@ module BigBang
 				begin
 					provider.ec2.describe_images(:image_id => [ami])
 				rescue AWS::InvalidAMIIDNotFound => e
-					puts "ami #{ami} not found"
+					raise "ami #{ami} not found"
 				end
 			end
-			puts "AMI's OK"
 		end
 
 		def test_dns
 			if provider.configured_zone.nil?
-				puts "Configured DNS domain zone not found"
-			else
-				puts "DNS domain OK"
+				raise "Configured DNS domain zone not found"
 			end
 		end
 
-		def test_elb
-			ap provider.elb.describe_load_balancers
-			puts "elb access OK"
-		end
-
 		def test
-			get_instances
-			puts "ec2 access OK"
+			notify("Testing EC2 access") do
+				get_instances
+			end
 
-			test_elb
-			test_availability_zones
-			test_amis
-			test_dns
+			notify("Testing configured availability zones") do
+				test_availability_zones
+			end
+
+			notify("Testing configured AMI's") do
+				test_amis
+			end
+	
+			notify("Testing DNS API access") do
+				test_dns
+			end
 		end
 	end
 end
