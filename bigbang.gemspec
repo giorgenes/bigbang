@@ -1,7 +1,7 @@
 Gem::Specification.new do |s|
   s.name = %q{bigbang}
-  s.version = "0.0.6"
-  s.date = %q{2011-07-16}
+  s.version = "0.0.7"
+  s.date = %q{2011-07-18}
   s.authors = ["Giorgenes Gelatti"]
   s.email = %q{giorgenes@gmail.com}
   s.summary = %q{A tool to bootstrap clusters of EC2 instances}
